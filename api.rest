@@ -1,9 +1,18 @@
 POST http://localhost:3000/api/users
 Content-Type: application/json
 
+{
+    "email": "test2@gmail.com",
+    "famillyName": "test",
+    "givenName": "testo"
+}
+
+###
+
+POST http://localhost:3000/api/companies 
+Content-Type: application/json
 
 {
-    "email": "test@gmail.com",
-    "famillyName": "test",
-    "givenName": "testo",
+"email" : "dimitrymabom@gmail.com", 
+"companyName" : "altplus"
 }

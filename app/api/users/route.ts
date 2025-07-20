@@ -10,33 +10,47 @@ export async function POST(request: Request) {
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
 
-      let user = await prisma.user.findUnique({
-        where: { email },
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          famillyName,
+          givenName,
+        },
       });
-
-      if (!user) {
-        user = await prisma.user.create({
+    } else {
+      if (user?.famillyName == null || user?.famillyName == null) {
+        user = await prisma.user.update({
+          where: { email },
           data: {
-            email,
-            famillyName,
-            givenName,
+            famillyName: user?.famillyName ?? famillyName,
+            givenName: user?.givenName ?? givenName,
           },
         });
-      } else {
-        if (user.famillyName == null || user.famillyName) {
-          user = await prisma.user.create({
-            where: { email },
-            data: {
-              famillyName: user.famillyName ?? famillyName,
-              givenName: user.givenName ?? givenName,
-            },
-          });
-        }
       }
     }
 
-    return NextResponse.json({ message: "User Create" }, { status: 201 });
+    const company = await prisma.company.findFirst({
+      where: {
+        employees: {
+          some: {
+            id: user.id,
+          },
+        },
+      },
+    });
+
+    if (company) {
+      return NextResponse.json({ companyId: company.id });
+    } else {
+      return NextResponse.json({ message: "nope" });
+    }
   } catch (error) {
     console.error("Error Api User", error);
     return NextResponse.json(

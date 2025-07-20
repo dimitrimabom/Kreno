@@ -34,7 +34,7 @@ export default function Home() {
                   className="w-8 h-8 md:w-16 md:h-16"
                 />
               </div>
-              <span className="">Kreno</span>
+              <span>Kreno</span>
             </h1>
             <h2 className="py-4 md:py-8 text-xl md:text-4xl font-semibold">
               Gerer la reservation de vos{" "}
