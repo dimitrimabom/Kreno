@@ -15,19 +15,47 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  famillyName      String?
-  givenName        String?
-  email            String    @unique
-  companyId        String?
-  company          Company?  @relation("CompanyEmployees", fields: [companyId], references: [id])
+  id          String  @id @default(cuid())
+  famillyName String?
+  givenName   String?
+  email       String  @unique
+
+  // Entreprises que ce user a créées
   createdCompanies Company[] @relation("CompanyCreators")
+
+  // Entreprises où ce user est employé
+  companies UserOnCompany[]
 }
 
 model Company {
-  id          String @id @default(cuid())
-  name        String @unique
-  employees   User[] @relation("CompanyEmployees")
+  id    String @id @default(cuid())
+  name  String @unique
+  rooms Room[]
+
+  // Créateur de l’entreprise
   createdById String
   createdBy   User   @relation("CompanyCreators", fields: [createdById], references: [id])
+
+  // Employés de l’entreprise (via table de jointure)
+  employees UserOnCompany[]
+}
+
+model Room {
+  id          String  @id @default(cuid())
+  name        String
+  capacity    Int
+  description String?
+  imgUrl      String? @default("/placeholder.jpg")
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id])
+}
+
+model UserOnCompany {
+  userId    String
+  companyId String
+
+  user    User    @relation(fields: [userId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@id([userId, companyId]) // Clé composée pour éviter les doublons
 }

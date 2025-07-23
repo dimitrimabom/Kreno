@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Wrapper from "@/components/Wrapper";
@@ -9,6 +8,15 @@ import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface Company {
   id: string;
@@ -20,6 +28,9 @@ const page = () => {
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<Company[] | null>(null);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [createdCompanies, setCreatedCompanies] = useState<Company[]>([]);
+  const [employedCompanies, setEmployedCompanies] = useState<Company[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +58,7 @@ const page = () => {
       }
 
       toast.success("Entreprise créée avec succès !");
+      fetchCompanies();
       setCompanyName("");
     } catch (error) {
       console.error(error);
@@ -56,21 +68,22 @@ const page = () => {
   const fetchCompanies = async () => {
     try {
       if (user?.email) {
-        const response = await fetch(`/api/companies?email=${user.email}`, {
-          method: "GET",
-        });
+        const response = await fetch(`/api/companies?email=${user.email}`);
 
         if (!response.ok) {
           const { message } = await response.json();
-          throw new Error(message);
+          toast.info(message);
+          return;
         }
 
         const data = await response.json();
-        setCompanies(data.companies);
+        setCreatedCompanies(data.createdCompanies || []);
+        setEmployedCompanies(data.employedCompanies || []);
         setLoading(false);
       }
     } catch (error) {
       console.error(error);
+      toast.error("Erreur lors du chargement des entreprises.");
     }
   };
 
@@ -78,94 +91,166 @@ const page = () => {
     fetchCompanies();
   }, [user]);
 
+  const handleDelete = async (companyId: string) => {
+    try {
+      const response = await fetch("/api/companies", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: companyId,
+        }),
+      });
+
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.info(message);
+        return;
+      }
+
+      toast.error("Entreprise supprimée avec succès !");
+      fetchCompanies();
+    } catch (error) {
+      console.error(error);
+      toast.info("Erreur interne du serveur.");
+    }
+  };
+
   return (
     <Wrapper>
-      <div>
-        <h1 className="text-2xl mb-4">Créer une entreprise</h1>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4 flex flex-row">
+      <Dialog
+        open={companyToDelete !== null}
+        onOpenChange={() => setCompanyToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+            <DialogDescription>
+              Voulez-vous vraiment supprimer l’entreprise
+              <strong>{companyToDelete?.name}</strong> ? Cette action est
+              irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompanyToDelete(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!companyToDelete) return;
+                await handleDelete(companyToDelete.id);
+                setCompanyToDelete(null);
+              }}
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="space-y-10">
+        {/* Création entreprise */}
+        <form
+          onSubmit={handleSubmit}
+          className="border border-gray-200 rounded-xl p-6 shadow-sm bg-white"
+        >
+          <h2 className="text-2xl font-semibold mb-4">Créer une entreprise</h2>
+          <div className="flex flex-col md:flex-row gap-4">
             <Input
               type="text"
               id="companyName"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="Nom de l'entreprise"
+              className="flex-1"
               required
-              className="maw-w-xs"
             />
-            <Button type="submit" className="ml-2">
+            <Button type="submit" className="w-full md:w-auto">
               Créer l'entreprise
             </Button>
           </div>
         </form>
-        <h1 className=" text-2xl  mb-4 font*boald">Mes entreprises</h1>
 
-        {loading ? (
-          <div className="text-center mt-32">
-            <span className="loading loading-spinner loading-lg"></span>
-          </div>
-        ) : companies && companies.length > 0 ? (
-          <ul className="list-decimal divide-base-200 divide-y">
-            {companies.map((company) => (
-              <li
-                key={company.id}
-                className="py-4 flex flex-col md:flex-row md:items-center justify-between"
-              >
-                <h1 className="text-xl md:2xl font-semibold mb-4">
-                  {company.name}
-                </h1>
-                <div className="flex items-center">
-                  <Link href={`employees/${company.id}`} className="mr-2">
-                    <Button variant="outline">Ajouter des employés</Button>
-                  </Link>
-                  <Link href={`rooms/${company.id}`} className="mr-2">
-                    <Button variant="outline">Ajouter des salles</Button>
-                  </Link>
-                  <Button
-                    variant="destructive"
-                    // onClick={() => handleDelete(company.id)}
+        <div className="grid grid-col s-2 gap-6">
+          {/* Liste des entreprises créées */}
+          <section>
+            <h2 className="text-2xl font-semibold mb-6">
+              Mes entreprises créées
+            </h2>
+            {createdCompanies.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {createdCompanies.map((company) => (
+                  <div
+                    key={company.id}
+                    className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm flex flex-col justify-between"
                   >
-                    <Trash2 className="w-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-center py-12">
-            <div className="max-w-md mx-auto">
-              <div className="mb-4">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
+                    <h3 className="text-lg font-semibold mb-4">
+                      {company.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Link href={`employees/${company.id}`}>
+                        <Button variant="outline" size="sm">
+                          Ajouter des employés
+                        </Button>
+                      </Link>
+                      <Link href={`rooms/${company.id}`}>
+                        <Button variant="outline" size="sm">
+                          Ajouter des salles
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setCompanyToDelete(company)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aucune entreprise trouvée
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Commencez par créer votre première entreprise pour organiser vos
-                espaces de travail.
+            ) : (
+              <p className="text-gray-500">Aucune entreprise créée.</p>
+            )}
+          </section>
+
+          {/* Liste des entreprises employé */}
+          <section className="flex flex-col">
+            <h2 className="text-2xl font-semibold mb-6">
+              Entreprises où je suis employé
+            </h2>
+            {employedCompanies.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {employedCompanies.map((company) => (
+                  <div
+                    key={company.id}
+                    className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm flex justify-between items-start"
+                  >
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">
+                        {company.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link href={`rooms/${company.id}`}>
+                        <Button variant="outline" size="sm">
+                          Voir les salles
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">
+                Vous n'êtes employé dans aucune entreprise.
               </p>
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p className="text-sm text-gray-600 mb-2">
-                  💡 <strong>Conseil :</strong> Utilisez le formulaire ci-dessus
-                  pour créer votre première entreprise.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
+          </section>
+        </div>
       </div>
     </Wrapper>
   );

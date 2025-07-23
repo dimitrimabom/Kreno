@@ -16,3 +16,15 @@ Content-Type: application/json
 "email" : "dimitrymabom@gmail.com", 
 "companyName" : "altplus"
 }
+
+###
+
+PATCH http://localhost:3000/api/companies 
+Content-Type: application/json
+
+{
+"id": "cmdcinms50005c29s1e24l54a",
+"creatorEmail": "dimitrymabom@gmail.com",
+"employeeEmail": "employee@email.com",
+"action": "ADD"
+}

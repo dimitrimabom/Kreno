@@ -32,8 +32,8 @@ const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 w-full backdrop-blur-sm">
-      <nav className="md:px-[10%] p-5 border-b border-base-200 w-full bg-background">
+    <div className="fixed top-0 w-full bg-background/95 border-b-accent-foreground/50 border-1">
+      <nav className="md:px-[10%] p-5 border-b border-black-200 w-full bg-background ">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl md:text-2xl font-semibold flex items-center">
@@ -99,7 +99,7 @@ const Navbar = () => {
       </nav>
 
       {isMenuOpen ? (
-        <div className="md:hidden shadow-lg p-4 rounded-lg space-y-4 flex flex-col mt-3">
+        <div className="md:hidden p-4 rounded-lg space-y-4 flex flex-col mt-3 ">
           <Link href={"/create-company"}>
             <Button
               variant="link"

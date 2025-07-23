@@ -9,8 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@edgestore/react": "^0.5.3",
+    "@edgestore/server": "^0.5.3",
     "@kinde-oss/kinde-auth-nextjs": "^2.8.3",
     "@prisma/client": "^6.12.0",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -20,7 +25,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sonner": "^2.0.6",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
