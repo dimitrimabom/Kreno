@@ -87,6 +87,7 @@ const page = () => {
 
   return (
     <Wrapper>
+      <h1 className="text-4xl mb-6 text-gray-800">Réserver une salle</h1>
       {companies.map((company) => {
         // On filtre les salles qui appartiennent à cette entreprise
         const companyRooms = rooms.filter(
@@ -97,15 +98,10 @@ const page = () => {
           <div key={company.id} className="mb-12">
             {/* Nom de l'entreprise */}
             {company.name && (
-              <h1 className="text-4xl font-extrabold mb-6 text-gray-900">
+              <h2 className="text-3xl font-bold mb-6 text-gray-900">
                 {company.name}
-              </h1>
+              </h2>
             )}
-
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              Réserver une salle
-            </h2>
-
             {loading ? (
               <div className="flex flex-col space-y-5">
                 <Skeleton className="h-32 w-full max-w-sm rounded-3xl shadow-md" />
